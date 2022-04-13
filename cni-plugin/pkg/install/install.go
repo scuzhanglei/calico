@@ -187,11 +187,13 @@ func Install() error {
 
 	// Place the new binaries if the directory is writeable.
 	dirs := []string{"/host/opt/cni/bin", "/host/secondary-bin-dir"}
+	hasWriteableBinDir := false
 	for _, d := range dirs {
 		if err := fileutil.IsDirWriteable(d); err != nil {
 			logrus.Infof("%s is not writeable, skipping", d)
 			continue
 		}
+		hasWriteableBinDir = true
 
 		// Iterate through each binary we might want to install.
 		files, err := ioutil.ReadDir("/opt/cni/bin/")
@@ -226,6 +228,10 @@ func Install() error {
 			logrus.WithError(err).Warnf("Failed getting CNI plugin version")
 		}
 		logrus.Infof("CNI plugin version: %s", out.String())
+	}
+
+	if !hasWriteableBinDir {
+		logrus.Fatal("none of bin dir is writeable")
 	}
 
 	if kubecfg != nil {
